@@ -6,7 +6,7 @@ FillDatabase.py read photovoltaic values via rtcclient and store them into a loc
 It is called by a cron job each 5 minutes. 
 
 sudo crontab -u root -e
-*/10 * * * * /usr/bin/python3 /<your file location>/FillDatabase.py >> /var/log/syslog 2>&1
+*/10 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
 
 RTCExchange.py read the values from the database an store them into a dictionary. This because, i use sqlite3 as database. It seems to me, sqlite3 couldn't used under threading conditions.
 
