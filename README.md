@@ -1,11 +1,16 @@
-# Photovoltaic
+# Photovoltaic RTC 6000
 
 Implement a photovoltaic system (inclusive battery) into homekit, with fakegato-history.
+
+python packages needed:
+- HAP-Python
+- sqlite3
+- rtcclient
 
 FillDatabase.py read photovoltaic values via rtcclient and store them into a local database.
 It is called by a cron job each 5 minutes. 
 
-sudo crontab -u root -e
+sudo crontab -u root -e (instead of simple crontab - e use this to route FillDatabase messages through cron into syslog)
 
 */10 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
 
