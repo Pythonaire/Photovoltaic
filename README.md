@@ -22,8 +22,7 @@ sudo crontab -u root -e
 */5 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
   ````
 (instead of simple crontab - e use this to route FillDatabase messages through cron into syslog)
-  
-    *don´t forget to make FillDatabase.py executable: sudo chmod 777 /your file location/FillDatabase.py
+don´t forget to make FillDatabase.py executable: sudo chmod 777 /your file location/FillDatabase.py
 
 ### RTCExchange.py
   * RTCExchange read the values from the database and store them into a dictionary. This because, i use sqlite3 as database. It seems to me, sqlite3 couldn't used under threading conditions.
