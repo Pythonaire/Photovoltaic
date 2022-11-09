@@ -15,12 +15,17 @@ To present historical data (ex. year household energy consumption) two routine a
 FillDatabase: 
 
   * FillDatabase.py read photovoltaic values via rtcclient and store them into a local database.
-It is called by a cron job each 5 minutes. 
-  * sudo crontab -u root -e (instead of simple crontab - e use this to route FillDatabase messages through cron into syslog)
-  */5 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
+It is called by a cron job each 5 minutes.
+
+```python
+sudo crontab -u root -e 
+*/5 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
+  ````
+  * (instead of simple crontab - e use this to route FillDatabase messages through cron into syslog)
+  
   * don't forget to make FillDatabase.py executable: sudo chmod 777 /your file location/FillDatabase.py
 
-*/10 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
+
 
 RTCExchange.py read the values from the database an store them into a dictionary. This because, i use sqlite3 as database. It seems to me, sqlite3 couldn't used under threading conditions.
 
