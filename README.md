@@ -2,9 +2,6 @@
 
 Implement a photovoltaic system (inclusive battery) into homekit, with fakegato-history.
 
-![Title](image.jpg "Title")
-
-
 ## python packages needed:
 - HAP-Python --> pip3 install HAP-python[QRCode]
 - sqlite3 --> sudo apt install sqlite3
