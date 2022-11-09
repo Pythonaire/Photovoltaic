@@ -2,15 +2,23 @@
 
 Implement a photovoltaic system (inclusive battery) into homekit, with fakegato-history.
 
+![Title](image.jpg "Title")
+
+
 python packages needed:
-- HAP-Python
-- sqlite3
-- rtcclient
+- HAP-Python --> pip3 install HAP-python[QRCode]
+- sqlite3 --> sudo apt install sqlite3
+- rtcclient --> sudo pip3 install -U rctclient
 
-FillDatabase.py read photovoltaic values via rtcclient and store them into a local database.
+To present historical data (ex. year household energy consumption) two routine are used:
+
+FillDatabase: 
+
+  * FillDatabase.py read photovoltaic values via rtcclient and store them into a local database.
 It is called by a cron job each 5 minutes. 
-
-sudo crontab -u root -e (instead of simple crontab - e use this to route FillDatabase messages through cron into syslog)
+  * sudo crontab -u root -e (instead of simple crontab - e use this to route FillDatabase messages through cron into syslog)
+  */5 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
+  * don't forget to make FillDatabase.py executable: sudo chmod 777 /your file location/FillDatabase.py
 
 */10 * * * * /usr/bin/python3 /your file location/FillDatabase.py >> /var/log/syslog 2>&1
 
