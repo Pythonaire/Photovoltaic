@@ -26,11 +26,14 @@ sudo crontab -u root -e
     *don´t forget to make FillDatabase.py executable: sudo chmod 777 /your file location/FillDatabase.py
 
 ### RTCExchange.py
-  * read the values from the database an store them into a dictionary. This because, i use sqlite3 as database. It seems to me, sqlite3 couldn't used under threading conditions.
+  * RTCExchange read the values from the database and store them into a dictionary. This because, i use sqlite3 as database. It seems to me, sqlite3 couldn't used under threading conditions.
 
 ### sqlite3:
 
 CREATE TABLE 'RTC' (id INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL, PanelCurrentConsumption FLOAT DEFAULT 0 NOT NULL, PanelTotalConsumption FLOAT DEFAULT 0 NOT NULL, FeedCurrentConsumption FLOAT DEFAULT 0 NOT NULL, FeedTotalConsumption FLOAT DEFAULT 0 NOT NULL, GridCurrentConsumption FLOAT DEFAULT 0 NOT NULL, GridTotalConsumption FLOAT DEFAULT 0 NOT NULL, HouseholdCurrentConsumption FLOAT DEFAULT 0 NOT NULL, HouseholdTotalConsumption FLOAT DEFAULT 0 NOT NULL, BatteryCurrentConsumption FLOAT DEFAULT 0 NOT NULL, BatteryTotalConsumption FLOAT DEFAULT 0 NOT NULL, BatteryPercentage INTEGER DEFAULT 0 NOT NULL, BatteryState INTEGER DEFAULT 0 NOT NULL);
 
-Change database location and photovoltaic device address in config.py
+At least: 
+
+  * Change database location and photovoltaic device address in config.py
+  * start main.py and authorize the bridge into apple homekit
 
