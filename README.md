@@ -30,7 +30,15 @@ sudo crontab -u root -e
 
 ### sqlite3:
 
+```sql
+sqlite3 'your database'
+
 CREATE TABLE 'RTC' (id INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL, PanelCurrentConsumption FLOAT DEFAULT 0 NOT NULL, PanelTotalConsumption FLOAT DEFAULT 0 NOT NULL, FeedCurrentConsumption FLOAT DEFAULT 0 NOT NULL, FeedTotalConsumption FLOAT DEFAULT 0 NOT NULL, GridCurrentConsumption FLOAT DEFAULT 0 NOT NULL, GridTotalConsumption FLOAT DEFAULT 0 NOT NULL, HouseholdCurrentConsumption FLOAT DEFAULT 0 NOT NULL, HouseholdTotalConsumption FLOAT DEFAULT 0 NOT NULL, BatteryCurrentConsumption FLOAT DEFAULT 0 NOT NULL, BatteryTotalConsumption FLOAT DEFAULT 0 NOT NULL, BatteryPercentage INTEGER DEFAULT 0 NOT NULL, BatteryState INTEGER DEFAULT 0 NOT NULL);
+
+.quit
+````
+
+
 
 At least: 
 
