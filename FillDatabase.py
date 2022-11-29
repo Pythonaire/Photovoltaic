@@ -17,8 +17,8 @@ import config
 
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
 
-RTCDEVICE = config.Config.RTCDEVICE
-RTC_DBNAME = config.Config.RTC_DBNAME
+RTCDEVICE = config.RTCDEVICE
+RTC_DBNAME = config.RTC_DBNAME
 
 def connect(db):
     try:
@@ -83,7 +83,7 @@ def get_rtc_values(rtc_value):
     except Exception as e:
         logging.info("*** error to read from RTC DEVICE *** {0}".format(e))
         value = 0
-    return value 
+    return value
 
 def collect_data():
     record = {}
@@ -138,7 +138,6 @@ def insert():
         write(cmd, values)
     except Exception as e:
         logging.info('sql error while writing: {0} \n'.format(e))
-
 
 if __name__ == '__main__':
     insert()

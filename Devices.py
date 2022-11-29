@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_SENSOR, CATEGORY_SPRINKLER, CATEGORY_OUTLET
-import RTCExchange
-import logging, requests, asyncio, json, time
-from history import FakeGatoHistory
+import CacheData
+import logging, time, threading
+from history310 import FakeGatoHistory
 import config
 #import atexit
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
+''' 
+copy const.py to to /usr/local/lib/python3.x/dist-packages/pyhap to use newer CATEGORY and PERMISSIONS
+'''
 
-
-NODES = config.Config.NODES
-NODE_CACHE = config.Config.NODE_CACHE
 EPOCH_OFFSET = 978307200
-
-RTCSQL = RTCExchange.SQL()
-DictSync = RTCSQL.Exchange()
-RTCDict = RTCExchange.RTCDict
-
+RTCValues = CacheData.RTC_CACHE
+RFM69Values = CacheData.RFM69_CACHE
+RTCData= CacheData.RTCData()
+cancel_future_calls =  CacheData.call_repeatedly(240,  RTCData.syncCache)
 
 #def exit_handler():
 #    DictSync.set()
 #    logging.info('****** terminate setInterval ********')
 
 #atexit.register(exit_handler)
+
 
 class Panel(Accessory):
     category = CATEGORY_OUTLET
@@ -34,20 +34,21 @@ class Panel(Accessory):
         Panel.configure_char("ResetTotal", value = time.time() - EPOCH_OFFSET)
         self.CurrentConsumption = Panel.configure_char('CurrentConsumption')
         self.TotalConsumption = Panel.configure_char('TotalConsumption')
-        self.CurrentConsumption.set_value(RTCDict['PanelCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['PanelTotalConsumption'])
         self.HistoryPanel = FakeGatoHistory('energy', self)
+        self.getValue()
 
-    @Accessory.run_at_interval(600)
+    def getValue(self):
+        self.Total = RTCValues['PanelTotalConsumption']
+        self.CurrentConsumption.set_value(RTCValues['PanelCurrentConsumption'])
+        self.TotalConsumption.set_value(RTCValues['PanelTotalConsumption'])
+        self.HistoryPanel.addEntry({'time':int(time.time()),'power': RTCValues['PanelHistory']})
+        
+    @Accessory.run_at_interval(300)
     def run(self):
-        logging.info('Panel Current: {0}, Total: {1}, History {2}  '. format(RTCDict['PanelCurrentConsumption'], RTCDict['PanelTotalConsumption'], RTCDict['PanelHistory']))
-        self.CurrentConsumption.set_value(RTCDict['PanelCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['PanelTotalConsumption'])
-        self.HistoryPanel.addEntry({'time':int(time.time()),'power': RTCDict['PanelHistory']})
+        self.getValue()
 
     def stop(self):
         logging.info('Stopping accessory.')
-
 
 class Grid(Accessory):
     category = CATEGORY_OUTLET
@@ -59,15 +60,17 @@ class Grid(Accessory):
         Grid.configure_char("ResetTotal", value = time.time() - EPOCH_OFFSET)
         self.CurrentConsumption = Grid.configure_char('CurrentConsumption')
         self.TotalConsumption = Grid.configure_char('TotalConsumption')
-        self.CurrentConsumption.set_value(RTCDict['GridCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['GridTotalConsumption'])
         self.HistoryGrid = FakeGatoHistory('energy', self)
+        self.getValue()
+
+    def getValue(self):
+        self.CurrentConsumption.set_value( RTCValues['GridCurrentConsumption'])
+        self.TotalConsumption.set_value(RTCValues['GridTotalConsumption'])
+        self.HistoryGrid.addEntry({'time':int(time.time()),'power': RTCValues['GridHistory']})
     
-    @Accessory.run_at_interval(600)
+    @Accessory.run_at_interval(300)
     def run(self):
-        self.CurrentConsumption.set_value(RTCDict['GridCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['GridTotalConsumption'])
-        self.HistoryGrid.addEntry({'time':int(time.time()),'power': RTCDict['GridHistory']})
+        self.getValue()
 
     def stop(self):
         logging.info('Stopping accessory.')
@@ -84,15 +87,17 @@ class Feed(Accessory):
         Feed.configure_char("ResetTotal", value = time.time() - EPOCH_OFFSET)
         self.CurrentConsumption = Feed.configure_char('CurrentConsumption')
         self.TotalConsumption = Feed.configure_char('TotalConsumption')
-        self.CurrentConsumption.set_value(RTCDict['FeedCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['FeedTotalConsumption'])
         self.HistoryFeed = FakeGatoHistory('energy', self)
+        self.getValue()
 
-    @Accessory.run_at_interval(600)
+    def getValue(self):
+        self.CurrentConsumption.set_value(RTCValues['FeedCurrentConsumption'])
+        self.TotalConsumption.set_value(RTCValues['FeedTotalConsumption'])
+        self.HistoryFeed.addEntry({'time':int(time.time()),'power': RTCValues['FeedHistory']})
+        
+    @Accessory.run_at_interval(300)
     def run(self):
-        self.CurrentConsumption.set_value(RTCDict['FeedCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['FeedTotalConsumption'])
-        self.HistoryFeed.addEntry({'time':int(time.time()),'power': RTCDict['FeedHistory']})
+        self.getValue()
     
     def stop(self):
         logging.info('Stopping accessory.')
@@ -107,20 +112,21 @@ class Consume(Accessory):
         Consume.configure_char("ResetTotal", value = time.time() - EPOCH_OFFSET)
         self.CurrentConsumption = Consume.configure_char('CurrentConsumption')
         self.TotalConsumption = Consume.configure_char('TotalConsumption')
-        self.CurrentConsumption.set_value(RTCDict['HouseholdCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['HouseholdTotalConsumption'])
         self.HistoryConsume = FakeGatoHistory('energy', self)
+        self.getValue()
 
-    @Accessory.run_at_interval(600)
+    def getValue(self):
+        self.CurrentConsumption.set_value(RTCValues['HouseholdCurrentConsumption'])
+        self.TotalConsumption.set_value(RTCValues['HouseholdTotalConsumption'])
+        self.HistoryConsume.addEntry({'time':int(time.time()),'power': RTCValues['HouseholdHistory']})
+        
+    @Accessory.run_at_interval(300)
     def run(self):
-        self.CurrentConsumption.set_value(RTCDict['HouseholdCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['HouseholdTotalConsumption'])
-        self.HistoryConsume.addEntry({'time':int(time.time()),'power': RTCDict['HouseholdHistory']})
+        self.getValue()
 
     def stop(self):
         logging.info('Stopping accessory.')
         
-
 class Battery(Accessory):
     category = CATEGORY_OUTLET
     def __init__(self, *args, **kwargs): 
@@ -133,27 +139,21 @@ class Battery(Accessory):
         self.ResetTotal = Battery.configure_char("ResetTotal", value = time.time() - EPOCH_OFFSET)
         self.CurrentConsumption = Battery.configure_char('CurrentConsumption')
         self.TotalConsumption = Battery.configure_char('TotalConsumption')
-        self.BatteryLevel.set_value(RTCDict['BatteryPercentage'])
-        self.ChargingState.set_value(RTCDict['BatteryState'])
-        self.CurrentConsumption.set_value(RTCDict['BatteryCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['BatteryTotalConsumption'])
         self.HistoryBattery = FakeGatoHistory('energy', self)
+        self.getValue()
 
-    def CurrentW(self):
-        batteryCurrentConsumption = RTCDict['BatteryCurrentConsumption']
-        if batteryCurrentConsumption > 0: # battery in unload state
-            batteryCurrentConsumption  = 0
-        else:
-            batteryCurrentConsumption  = abs(batteryCurrentConsumption)
-        return batteryCurrentConsumption
 
-    @Accessory.run_at_interval(600)
+    def getValue(self):
+        self.BatteryLevel.set_value(RTCValues['BatteryPercentage'])
+        self.ChargingState.set_value(RTCValues['BatteryState'])
+        self.CurrentConsumption.set_value(RTCValues['BatteryCurrentConsumption'])
+        self.TotalConsumption.set_value(RTCValues['BatteryTotalConsumption'])
+        self.HistoryBattery.addEntry({'time':int(time.time()),'power': RTCValues['BatteryHistory']})
+
+    @Accessory.run_at_interval(300)
     def run(self):
-        self.BatteryLevel.set_value(RTCDict['BatteryPercentage'])
-        self.ChargingState.set_value(RTCDict['BatteryState'])
-        self.CurrentConsumption.set_value(RTCDict['BatteryCurrentConsumption'])
-        self.TotalConsumption.set_value(RTCDict['BatteryTotalConsumption'])
-        self.HistoryBattery.addEntry({'time':int(time.time()),'power': RTCDict['BatteryHistory']})
+        self.getValue()
 
     def stop(self):
         logging.info('Stopping accessory.')
+

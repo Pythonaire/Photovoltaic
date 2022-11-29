@@ -8,6 +8,7 @@ Implement a photovoltaic system (inclusive battery) into homekit, with fakegato-
 - rtcclient --> sudo pip3 install -U rctclient
 
 To present historical data (ex. year household energy consumption) two routine are used:
+I had some trouble to call data from the photovoltaic directly via rtcclient api (connection error), so the solution for me is catching the data along a databaase cache. This is a good way, because data presented from the photovoltaic is limited.
 
 ### FillDatabase: 
 
@@ -20,8 +21,8 @@ sudo crontab -u root -e
   ````
 Instead of simple 'crontab - e' use this to route FillDatabase messages through cron into syslog. Don´t forget to make FillDatabase.py executable: 'sudo chmod 777 /your file location/FillDatabase.py'.
 
-### RTCExchange.py
-  * RTCExchange read the values from the database and store them into a dictionary. This because, i use sqlite3 as database. It seems to me, sqlite3 couldn't used under threading conditions.
+### CacheData.py
+  * CacheData read the values from the database and store them into a dictionary. This because, i use sqlite3 as database.
 
 ### sqlite3:
 
@@ -39,4 +40,6 @@ At least:
 
   * Change database location and photovoltaic device address in config.py
   * start main.py and authorize the bridge into apple homekit
+
+To present historical data you can use history.py or history310.py related to you python version.
 
