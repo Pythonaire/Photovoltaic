@@ -13,7 +13,6 @@ copy const.py to to /usr/local/lib/python3.x/dist-packages/pyhap to use newer CA
 
 EPOCH_OFFSET = 978307200
 RTCValues = CacheData.RTC_CACHE
-RFM69Values = CacheData.RFM69_CACHE
 RTCData= CacheData.RTCData()
 cancel_future_calls =  CacheData.call_repeatedly(240,  RTCData.syncCache)
 

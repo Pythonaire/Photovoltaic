@@ -32,20 +32,7 @@ loader = Loader(path_char='CharacteristicDefinition.json',path_service='ServiceD
 #atexit.register(exit_handler)
 
 def get_bridge(driver):
-    bridge = Bridge(driver, 'MacServer')
-    # mixed Devices
-    for item in config.NODES_GARDEN:
-        DeviceClass = getattr(Devices,item)
-        NodeNumber = config.NODES_GARDEN[item]
-        bridge.add_accessory(DeviceClass(NodeNumber, driver, item))
-        logging.info('****** add RFM69 Accessory: {0}, Number: {1} *****'.format(item, NodeNumber))
-    for item in config.NODES_HOUSE:
-        DeviceClass = getattr(Devices,item)
-        NodeNumber = config.NODES_HOUSE[item]
-        bridge.add_accessory(DeviceClass(NodeNumber, driver, item))
-        logging.info('****** add RFM69 Accessory: {0}, Number: {1} *****'.format(item, NodeNumber))
-    Soil = Devices.Moisture(12, driver, 'Soil Moisture') # needed to be separated because of new eve app
-    bridge.add_accessory(Soil)
+    bridge = Bridge(driver, 'YourBridgeName')
     # directly connected devices
     Panel = Devices.Panel(driver, 'RTC Panel')
     bridge.add_accessory(Panel)
