@@ -3,10 +3,8 @@ import logging
 import sqlite3 as sql
 import threading
 from sqlite3 import Error
-
-
 import config
-RTC_DBNAME = config.Config.RTC_DBNAME
+RTC_DBNAME = config.RTC_DBNAME
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
 
 RTCDict = {
@@ -43,7 +41,7 @@ def setInterval(interval):
         return wrapper
     return decorator
 
-class SQL():
+class RTCData():
     def __init__(self):
         self.dbName = RTC_DBNAME
 
@@ -70,11 +68,12 @@ class SQL():
     def TotalWh(self, column):
         cmd = "SELECT MAX({0}) FROM RTC WHERE date(time,'unixepoch') > date('now', 'start of year');".format(column)
         actualyear =round(self.fetchone(cmd) / 1000, 2)
-        cmd = "SELECT MAX({0}) FROM RTC WHERE date(time,'unixepoch') < date('now', 'start of year');".format(column)
+        cmd = "SELECT IFNULL(MAX({0}),0) FROM RTC WHERE date(time,'unixepoch') < date('now', 'start of year');".format(column)
         if self.fetchone(cmd) == None:
             lastyear = 0
         else:
             lastyear =round(self.fetchone(cmd) / 1000, 2)
+        #logging.info('***{0}  *** TotalConsumption, now: {1}, lastyear: {2} ***'.format(column, actualyear, lastyear))
         return round(actualyear - lastyear, 2)  # type: ignore
 
     def ActualValue(self, column):
@@ -100,22 +99,85 @@ class SQL():
         except Exception as e:
             logging.info('sql error while writing: {0} \n'.format(e))
             maxId = 0
-        if maxId > 11: # we want the last hour, the script runs every 10 minutes -> we need 12 values
-            RTCDict['PanelCurrentConsumption'] = self.AverageWh('PanelCurrentConsumption')
-            RTCDict['PanelHistory'] = self.ActualValue('PanelCurrentConsumption')
+        if maxId > 11: # we want the last hour, the script runs every 10 minutes -> we need 6 values
+            RTCDict['PanelCurrentConsumption'] = self.ActualValue('PanelCurrentConsumption')
+            RTCDict['PanelHistory'] = self.AverageWh('PanelCurrentConsumption')
             RTCDict['PanelTotalConsumption'] = self.TotalWh('PanelTotalConsumption')
-            RTCDict['FeedCurrentConsumption'] = self.AverageWh('FeedCurrentConsumption')
-            RTCDict['FeedHistory'] = self.ActualValue('FeedCurrentConsumption')
+            RTCDict['FeedCurrentConsumption'] = self.ActualValue('FeedCurrentConsumption')
+            RTCDict['FeedHistory'] = self.AverageWh('FeedCurrentConsumption')
             RTCDict['FeedTotalConsumption'] =  self.TotalWh('FeedTotalConsumption')
-            RTCDict['GridCurrentConsumption'] = self.AverageWh('GridCurrentConsumption')
-            RTCDict['GridHistory'] = self.ActualValue('GridCurrentConsumption')
+            RTCDict['GridCurrentConsumption'] = self.ActualValue('GridCurrentConsumption')
+            RTCDict['GridHistory'] = self.AverageWh('GridCurrentConsumption')
             RTCDict['GridTotalConsumption'] = self.TotalWh('GridTotalConsumption')
-            RTCDict['HouseholdCurrentConsumption'] = self.AverageWh('HouseholdCurrentConsumption')
-            RTCDict['HouseholdHistory'] = self.ActualValue('HouseholdCurrentConsumption')
+            RTCDict['HouseholdCurrentConsumption'] = self.ActualValue('HouseholdCurrentConsumption')
+            RTCDict['HouseholdHistory'] = self.AverageWh('HouseholdCurrentConsumption')
             RTCDict['HouseholdTotalConsumption'] = self.TotalWh('HouseholdTotalConsumption')
-            RTCDict['BatteryCurrentConsumption'] = self.AverageWh('BatteryCurrentConsumption')
-            RTCDict['BatteryHistory'] = self.ActualValue('BatteryCurrentConsumption')
+            RTCDict['BatteryCurrentConsumption'] = self.ActualValue('BatteryCurrentConsumption')
+            RTCDict['BatteryHistory'] = self.AverageWh('BatteryCurrentConsumption')
             RTCDict['BatteryTotalConsumption'] = self.TotalWh('BatteryTotalConsumption')
             RTCDict['BatteryPercentage'] = self.ActualValue('BatteryPercentage')
             RTCDict['BatteryState'] = self.ActualValue('BatteryState')
+        else:
+            RTCDict['PanelCurrentConsumption'] = self.ActualValue('PanelCurrentConsumption')
+            RTCDict['PanelHistory'] = 0
+            RTCDict['PanelTotalConsumption'] = self.TotalWh('PanelTotalConsumption')
+            RTCDict['FeedCurrentConsumption'] = self.AverageWh('FeedCurrentConsumption')
+            RTCDict['FeedHistory'] = 0
+            RTCDict['FeedTotalConsumption'] =  self.TotalWh('FeedTotalConsumption')
+            RTCDict['GridCurrentConsumption'] = self.ActualValue('GridCurrentConsumption')
+            RTCDict['GridHistory'] = 0
+            RTCDict['GridTotalConsumption'] = self.TotalWh('GridTotalConsumption')
+            RTCDict['HouseholdCurrentConsumption'] = self.ActualValue('HouseholdCurrentConsumption')
+            RTCDict['HouseholdHistory'] = 0
+            RTCDict['HouseholdTotalConsumption'] = self.TotalWh('HouseholdTotalConsumption')
+            RTCDict['BatteryCurrentConsumption'] = self.ActualValue('BatteryCurrentConsumption')
+            RTCDict['BatteryHistory'] = 0
+            RTCDict['BatteryTotalConsumption'] = self.TotalWh('BatteryTotalConsumption')
+            RTCDict['BatteryPercentage'] = self.ActualValue('BatteryPercentage')
+            RTCDict['BatteryState'] = self.ActualValue('BatteryState')
+    
+    def inital(self):
+        cmd = 'SELECT MAX(id) FROM RTC;'
+        try:
+            maxId = self.fetchone(cmd)
+        except Exception as e:
+            logging.info('sql error while writing: {0} \n'.format(e))
+            maxId = 0
+        if maxId > 11: # we want the last hour, the script runs every 10 minutes -> we need 6 values
+            RTCDict['PanelCurrentConsumption'] = self.ActualValue('PanelCurrentConsumption')
+            RTCDict['PanelHistory'] = self.AverageWh('PanelCurrentConsumption')
+            RTCDict['PanelTotalConsumption'] = self.TotalWh('PanelTotalConsumption')
+            RTCDict['FeedCurrentConsumption'] = self.ActualValue('FeedCurrentConsumption')
+            RTCDict['FeedHistory'] = self.AverageWh('FeedCurrentConsumption')
+            RTCDict['FeedTotalConsumption'] =  self.TotalWh('FeedTotalConsumption')
+            RTCDict['GridCurrentConsumption'] = self.ActualValue('GridCurrentConsumption')
+            RTCDict['GridHistory'] = self.AverageWh('GridCurrentConsumption')
+            RTCDict['GridTotalConsumption'] = self.TotalWh('GridTotalConsumption')
+            RTCDict['HouseholdCurrentConsumption'] = self.ActualValue('HouseholdCurrentConsumption')
+            RTCDict['HouseholdHistory'] = self.AverageWh('HouseholdCurrentConsumption')
+            RTCDict['HouseholdTotalConsumption'] = self.TotalWh('HouseholdTotalConsumption')
+            RTCDict['BatteryCurrentConsumption'] = self.ActualValue('BatteryCurrentConsumption')
+            RTCDict['BatteryHistory'] = self.AverageWh('BatteryCurrentConsumption')
+            RTCDict['BatteryTotalConsumption'] = self.TotalWh('BatteryTotalConsumption')
+            RTCDict['BatteryPercentage'] = self.ActualValue('BatteryPercentage')
+            RTCDict['BatteryState'] = self.ActualValue('BatteryState')
+        else:
+            RTCDict['PanelCurrentConsumption'] = self.ActualValue('PanelCurrentConsumption')
+            RTCDict['PanelHistory'] = 0
+            RTCDict['PanelTotalConsumption'] = self.TotalWh('PanelTotalConsumption')
+            RTCDict['FeedCurrentConsumption'] = self.AverageWh('FeedCurrentConsumption')
+            RTCDict['FeedHistory'] = 0
+            RTCDict['FeedTotalConsumption'] =  self.TotalWh('FeedTotalConsumption')
+            RTCDict['GridCurrentConsumption'] = self.ActualValue('GridCurrentConsumption')
+            RTCDict['GridHistory'] = 0
+            RTCDict['GridTotalConsumption'] = self.TotalWh('GridTotalConsumption')
+            RTCDict['HouseholdCurrentConsumption'] = self.ActualValue('HouseholdCurrentConsumption')
+            RTCDict['HouseholdHistory'] = 0
+            RTCDict['HouseholdTotalConsumption'] = self.TotalWh('HouseholdTotalConsumption')
+            RTCDict['BatteryCurrentConsumption'] = self.ActualValue('BatteryCurrentConsumption')
+            RTCDict['BatteryHistory'] = 0
+            RTCDict['BatteryTotalConsumption'] = self.TotalWh('BatteryTotalConsumption')
+            RTCDict['BatteryPercentage'] = self.ActualValue('BatteryPercentage')
+            RTCDict['BatteryState'] = self.ActualValue('BatteryState')
+
             
