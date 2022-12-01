@@ -4,10 +4,10 @@ from pyhap.const import CATEGORY_SENSOR, CATEGORY_SPRINKLER, CATEGORY_OUTLET
 import CacheData
 import logging, time, threading
 from sys import version_info
-if version_info[1] < 10:
-    from history import FakeGatoHistory
-else:
+if version_info[0] >2 and version_info[1] > 9:
     from history310 import FakeGatoHistory
+else:
+    from history import FakeGatoHistory
 import config
 #import atexit
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
