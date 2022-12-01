@@ -41,5 +41,5 @@ At least:
   * Change database location and photovoltaic device address in config.py
   * start main.py and authorize the bridge into apple homekit
 
-To present historical data you can use history.py or history310.py related to you python version.
+To present historical data history.py or history310.py is called, related to you python minor version, because Python 3.10 contains faster match function.
 
