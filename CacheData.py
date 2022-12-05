@@ -10,6 +10,8 @@ RTC_DBNAME = config.RTC_DBNAME
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
 
 
+RFM69_CACHE = {}
+
 RTC_CACHE = {
     'PanelCurrentConsumption': 0,
     'PanelHistory':0,
@@ -29,6 +31,8 @@ RTC_CACHE = {
     'BatteryPercentage': 0,
     'BatteryState': 0 
 }
+
+AverageToDisplay = 300
 
 
 def call_repeatedly(interval, func):
@@ -134,3 +138,62 @@ class RTCData():
             RTC_CACHE['BatteryTotalConsumption'] = self.TotalWh('BatteryTotalConsumption')
             RTC_CACHE['BatteryPercentage'] = self.ActualValue('BatteryPercentage')
             RTC_CACHE['BatteryState'] = self.ActualValue('BatteryState')
+    
+
+class RFM69Data():
+    def __init__(self):
+        self.GardenNodes = {k :str(v) for k, v in config.NODES_GARDEN.items()} # switch node number to string, because of easier json handling
+        self.HouseNodes = {k :str(v) for k, v in config.NODES_HOUSE.items()} # switch node number to string, because of easier json handling
+        self.GardenUrl = config.RFM69Garden_SYNC
+        self.HouseUrl = config.RFM69House_SYNC
+        self.GardenControlUrl = config.RFM69Garden_CONTROL
+        self.RadioUrl = config.RADIO_URL
+        self.syncCache() # inital
+
+    def syncCache(self):
+        global RFM69_CACHE
+        #my_dictionary = {k :str(v) for k, v in self.HouseNodes.items()}
+        #logging.info("dict: {0}".format(my_dictionary))
+        try:
+
+            dict = requests.get(self.HouseUrl, timeout=2).json()
+            for node in self.HouseNodes.values():
+                if node in dict:
+                    RFM69_CACHE[node] = dict[node]
+                else:
+                    RFM69_CACHE[node] = None
+        except ConnectTimeout as e:
+            logging.info('**** request to {0} timed out: {1}'.format(self.HouseUrl, e)) 
+            for node in self.HouseNodes.values():
+                RFM69_CACHE[node] = None   
+        try:
+            dict = requests.get(self.GardenUrl, timeout = 2).json()
+            for node in self.GardenNodes.values():
+                if node in dict:
+                    RFM69_CACHE[node] = dict[node]
+                else:
+                    RFM69_CACHE[node] = None
+        except ConnectTimeout as e:
+            logging.info('**** request to {0} timed out: {1}'.format(self.GardenUrl, e))
+            for node in self.GardenNodes.values():
+                RFM69_CACHE[node] = None
+        logging.info('**** Cache refreshed with data from Nodes {0} ****'.format(list(RFM69_CACHE.keys())))
+
+    def controlrfm(self, bridge, node, cmd):
+        global RFM69_CACHE
+        httpsend = {node: cmd}
+        try:
+            RFM69_CACHE[node] = requests.get(bridge, json=json.dumps(httpsend), timeout= 2).json()[node]
+            #rfm return with json {'node':None} if request failed
+            #NODE_CACHE[node] = answer[node]
+        except ConnectTimeout as e:
+            logging.info('**** request to {0} timed out: {1}'.format(bridge, e)) 
+            RFM69_CACHE[node] = None
+    
+    def forwarder(self, data):
+        try:
+            requests.post(self.RadioUrl, json=json.dumps(data))
+            logging.info('**** post Temp to Radio {0}'.format(data))
+        except requests.exceptions.ConnectionError as e:
+            logging.info('**** request.post to {0} got exception {1}'.format(self.RadioUrl,e))
+
