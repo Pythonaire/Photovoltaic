@@ -19,7 +19,7 @@ class FakeGatoTimer():
         return stopped.set
         
     def subscribe(self, service, callback):
-        logging.info("** Fakegato-timer Subscription : {0}".format(service.accessoryName))
+        #logging.info("** Fakegato-timer Subscription : {0}".format(service.accessoryName))
         newService = {
 			'service': service,
 			'callback': callback, # -> calculateAverage/select_types
@@ -42,7 +42,7 @@ class FakeGatoTimer():
         
 
     def executeCallbacks(self):
-        #logging.info("**Fakegato-timer: executeCallbacks**")
+        logging.info("**Fakegato-timer: executeCallbacks** {0} ** interval {1} minutes**".format(self.accessoryName, self.minutes))
         if len(self.subscribedServices) != 0:
             for service in self.subscribedServices:
                 if callable(service["callback"]): # --> calculateAverage
@@ -56,7 +56,7 @@ class FakeGatoTimer():
                         )
 
     def executeImmediateCallback(self, service):
-        #logging.info("**Fakegato-timer: executeImmediateCallback**") 
+        logging.info("**Fakegato-timer: executeImmediateCallback**") 
         if callable(service['callback']) and len(service['backLog']) != 0:
             service['callback']({
 				'backLog': service['backLog'],
@@ -77,13 +77,12 @@ class FakeGatoTimer():
         else:
             self.getSubscriber(service)['backLog'].append(data)
             if self.running == False:
-                logging.info("**Start Fakegato-Timer {0} for {1} min  **".format(self.accessoryName, self.minutes))
+                logging.info("**Start Fakegato-Timer {0} with {1} minutes inverval**".format(self.accessoryName, self.minutes))
                 self.running = True
                 self.cancel_future_calls = self.call_repeatedly(self.minutes*60, self.executeCallbacks)
 
-
     def emptyData(self, service):
-        logging.info("**Fakegato-timer: emptyData ** {0} ".format(service.accessoryName))
+        #logging.info("**Fakegato-timer: emptyData ** {0} ".format(service.accessoryName))
         source = self.getSubscriber(service)
         if len(source['backLog']) != 0:
             source['previousBackLog'] = source['backLog']
