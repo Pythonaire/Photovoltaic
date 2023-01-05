@@ -9,7 +9,6 @@ import config
 RTC_DBNAME = config.RTC_DBNAME
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
 
-
 RFM69_CACHE = {}
 
 RTC_CACHE = {
@@ -32,9 +31,6 @@ RTC_CACHE = {
     'BatteryState': 0 
 }
 
-AverageToDisplay = 300
-
-
 def call_repeatedly(interval, func):
         stopped = threading.Event()
         def loop():
@@ -43,7 +39,6 @@ def call_repeatedly(interval, func):
                 func()
         threading.Thread(target=loop, daemon=True).start()    
         return stopped.set
-
 
 class RTCData():
     def __init__(self):
@@ -102,7 +97,7 @@ class RTCData():
         except Exception as e:
             logging.info('sql error while writing: {0} \n'.format(e))
             maxId = 0
-        if maxId > 11: # we want the last hour, the script runs every 10 minutes -> we need 6 values
+        if maxId > 11: # we want the last hour, the script runs every 5 minutes -> we need 12 values
             RTC_CACHE['PanelCurrentConsumption'] = self.ActualValue('PanelCurrentConsumption')
             RTC_CACHE['PanelHistory'] = self.AverageWh('PanelCurrentConsumption')
             RTC_CACHE['PanelTotalConsumption'] = self.TotalWh('PanelTotalConsumption')
